@@ -1,0 +1,31 @@
+- name: --- deploy application to Tomcat ----
+  hosts: all
+  become: true
+  tasks:
+    - name: stop tomcat
+      service:
+        name: tomcat
+        state: stopped
+      tags: [stop_tomcat]
+    - name: ---remove old war ----
+      file:
+        path: '{{ item }}'
+        state: absent
+      with_items:
+        - "/opt/tomcat/webapps/hello-word"
+        - "/opt/tomcat/webapps/hello-word.war"
+      tags: [remote_old_war]
+
+    - name: ---deploy new war ----
+      copy:
+        src: "/tmp/deploy/simple-war-app-1.0.war"
+        dest: "/opt/tomcat/webapps/hello-word.war"
+        owner: tomcat
+        group: tomcat
+        mode: '0644'
+      tags: [deploy_war]
+    - name: ----start tomcat ----
+      service:
+        name: tomcat
+        state: started
+      tags: [start_tomcat]
